@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ANFA AKADEMİ V42.0</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162280.png">
+    <meta name="theme-color" content="#020617">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <style>
+        :root { --p: #fbbf24; --bg: #020617; --card: rgba(30, 41, 59, 0.95); --t: #f8fafc; --ok: #10b981; --err: #ef4444; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
+        body { background: var(--bg); color: var(--t); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* PWA Tanıtım Ekranı */
+        #intro-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); z-index: 10001; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+        
+        /* Yükleme Bannerı */
+        #pwa-install-banner { position: fixed; bottom: 20px; left: 20px; right: 20px; background: var(--p); color: #000; padding: 15px; border-radius: 20px; display: none; z-index: 9999; justify-content: space-between; align-items: center; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid white; }
+
+        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); display: flex; align-items: center; justify-content: center; z-index: 9998; }
+        .auth-box { background: var(--card); padding: 40px; border-radius: 30px; width: 95%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        nav { position: fixed; left: 0; top: 0; bottom: 0; width: 280px; background: #020617; border-right: 1px solid #1e293b; z-index: 4000; transform: translateX(-100%); overflow-y: auto; }
+        nav.open { transform: translateX(0); }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 3500; }
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #content { flex: 1; padding: 20px; overflow-y: auto; background: #020617; }
+        .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+        .btn { background: var(--p); color: #000; padding: 16px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn:disabled { opacity: 0.5; }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .menu-opt { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 8px; }
+        .q-opt { width: 100%; padding: 15px; margin: 10px 0; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; color: white; text-align: left; cursor: pointer; }
+        .tab-btn { padding: 10px 20px; background: #1e293b; border: none; color: white; cursor: pointer; border-radius: 10px 10px 0 0; margin-right: 5px; }
+        .tab-btn.active { background: var(--p); color: #000; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #1e293b; }
+        label { font-size: 11px; color: var(--p); font-weight: bold; margin-top: 10px; display: block; }
+        #online-list { font-size: 10px; color: #10b981; margin-right: 15px; text-align: right; line-height: 1.2; }
+    </style>
+</head>
+<body>
+
+<div id="intro-overlay">
+    <div style="font-size: 60px; margin-bottom: 20px;">🛡️</div>
+    <h2 style="color:var(--p)">ANFA AKADEMİ</h2>
+    <p style="color:#94a3b8; max-width: 300px;">Eğitim ve sınav dünyasına hoş geldiniz. Uygulamayı hemen kullanmaya başlayın.</p>
+    <button class="btn" onclick="closeIntro()" style="max-width:200px">BAŞLA</button>
+</div>
+
+<div id="pwa-install-banner">
+    <span>Uygulamayı ana ekrana ekle!</span>
+    <button onclick="installPWA()" style="background:#000; color:#fff; border:none; padding:10px 20px; border-radius:10px; font-weight:bold;">YÜKLE</button>
+</div>
+
+<div id="overlay" onclick="toggleNav()"></div>
+<div id="auth-screen">
+    <div class="auth-box">
+        <h1 style="color:var(--p); margin:0;">ANFA AKADEMİ</h1>
+        <p id="auth-info" style="font-size:12px; color:#fbbf24;">SİSTEME GİRİŞ YAPIN</p>
+        <div id="login-form">
+            <input type="text" id="l-user" placeholder="AD SOYAD" oninput="this.value = trFix(this.value)">
+            <input type="password" id="l-pass" placeholder="ŞİFRE">
+            <button class="btn" onclick="login()">GİRİŞ YAP</button>
+        </div>
+    </div>
+</div>
+
+<nav id="sidebar">
+    <div style="padding:30px; text-align:center; border-bottom:1px solid #1e293b;"><h3 style="color:var(--p); margin:0;">ANFA PANEL</h3></div>
+    <div id="menu-area" style="padding:20px;"></div>
+</nav>
+
+<main>
+    <div style="height:70px; background:var(--card); display:flex; align-items:center; padding:0 20px; border-bottom:2px solid var(--p);">
+        <button onclick="toggleNav()" style="background:none; border:none; color:var(--p); font-size:26px; cursor:pointer;">☰</button>
+        <div id="online-list"></div>
+        <div id="u-info" style="margin-left:auto; text-align:right;"></div>
+        <button onclick="location.reload()" style="margin-left:15px; background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">ÇIKIŞ</button>
+    </div>
+    <div id="content"></div>
+</main>
+
+<script>
+// --- PWA ÇEKİRDEK MANTIĞI ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+
+let deferredPrompt;
+const installBanner = document.getElementById('pwa-install-banner');
+
+window.addEventListener('load', () => {
+    // Tanıtım ekranı kontrolü
+    if (!localStorage.getItem('introShown')) {
+        document.getElementById('intro-overlay').style.display = 'flex';
+    }
+});
+
+function closeIntro() {
+    document.getElementById('intro-overlay').style.display = 'none';
+    localStorage.setItem('introShown', 'true');
+    // Eğer yükleme yapılabiliyorsa bannerı göster
+    if (deferredPrompt) installBanner.style.display = 'flex';
+    
+    // iOS için küçük bir ipucu (Opsiyonel)
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    if (isIos) {
+        alert("iPhone'a yüklemek için: Tarayıcı altındaki Paylaş butonuna basıp 'Ana Ekrana Ekle'yi seçin.");
+    }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Sadece tanıtım geçildiyse bannerı göster
+    if (localStorage.getItem('introShown')) {
+        installBanner.style.display = 'flex';
+    }
+});
+
+async function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') installBanner.style.display = 'none';
+        deferredPrompt = null;
+    }
+}
+
+// --- UYGULAMA MANTIĞI ---
+const DERSLER = ["Özel Güvenlik Hukuku", "Güvenlik Tedbirleri", "Güvenlik Sistemleri", "Temel İlkyardım", "Yangın Güvenliği", "Etkili İletişim", "Kalabalık Yönetimi", "Kişi Koruma", "Genel Kollukla İlişkiler", "Uyuşturucu Madde Bilgisi"];
+
+const config = {
+    apiKey: "AIzaSyBLSR56Dz8VXdFbZxfsnyLNM2T9gSb1pEQ",
+    authDomain: "anfaegtim-6a4b9.firebaseapp.com",
+    databaseURL: "https://anfaegtim-6a4b9-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "anfaegtim-6a4b9",
+    storageBucket: "anfaegtim-6a4b9.firebasestorage.app",
+    messagingSenderId: "468286813961",
+    appId: "1:468286813961:web:778ec6ba4e593c4fe88cc6"
+};
+
+firebase.initializeApp(config);
+const db = firebase.database();
+const storage = firebase.storage();
+
+let me = null, sorubankasi = {}, dersicerikleri = {}, tumKullanicilar = {}, tumSinavlar = [], homeConfig = {}, dersvideolari = {};
+
+function trFix(s) {
+    const m = {'ç':'C','ğ':'G','ı':'I','i':'I','ö':'O','ş':'S','ü':'U','Ç':'C','Ğ':'G','İ':'I','Ö':'O','Ş':'S','Ü':'U'};
+    return s.replace(/[çğıiöşüÇĞİÖŞÜ]/g, k => m[k]).replace(/\s+/g, '').toUpperCase();
+}
+
+db.ref('sorubankasi').on('value', s => sorubankasi = s.val() || {});
+db.ref('dersicerikleri').on('value', s => dersicerikleri = s.val() || {});
+db.ref('dersvideolari').on('value', s => dersvideolari = s.val() || {});
+db.ref('homeConfig').on('value', s => homeConfig = s.val() || {});
+db.ref('kullanicilar').on('value', s => {
+    tumKullanicilar = s.val() || {};
+    updateOnlineStatus();
+});
+db.ref('sinavlar').on('value', s => { 
+    tumSinavlar = []; const val = s.val(); 
+    for(let id in val) tumSinavlar.push({...val[id], id}); 
+});
+
+function updateOnlineStatus() {
+    const simdi = Date.now();
+    let onlines = [];
+    for(let id in tumKullanicilar) {
+        if(tumKullanicilar[id].lastSeen && (simdi - tumKullanicilar[id].lastSeen < 300000)) {
+            onlines.push(tumKullanicilar[id].isim);
+        }
+    }
+    document.getElementById("online-list").innerHTML = `● ÇEVRİMİÇİ (${onlines.length})<br><span style="color:#94a3b8">${onlines.join(', ')}</span>`;
+}
+
+function heartBeat() {
+    if(me && me.id) db.ref('kullanicilar/'+me.id).update({lastSeen: Date.now()});
+}
+
+function login() {
+    const u = trFix(document.getElementById("l-user").value);
+    const p = document.getElementById("l-pass").value;
+    if(!u) return alert("Lütfen adınızı girin.");
+    
+    let found = false;
+    for(let id in tumKullanicilar) {
+        if(trFix(tumKullanicilar[id].isim) === u) {
+            found = true;
+            if(!tumKullanicilar[id].sifre) { firstLogin(id, u); return; }
+            if(tumKullanicilar[id].sifre === p) { me = tumKullanicilar[id]; me.id = id; startApp(); return; }
+        }
+    }
+    if(!found) alert("Kullanıcı bulunamadı!");
+    else alert("Hatalı Şifre!");
+}
+
+function firstLogin(id, name) {
+    document.querySelector(".auth-box").innerHTML = `<h3>Hoş Geldin, ${name}</h3><p>Şifreni belirle:</p><input type="password" id="n-p" placeholder="Yeni Şifre"><button class="btn" onclick="saveP('${id}')">KAYDET VE GİRİŞ YAP</button>`;
+}
+
+function saveP(id) {
+    const p = document.getElementById("n-p").value;
+    if(p.length < 4) return alert("Min 4 karakter!");
+    db.ref('kullanicilar/'+id).update({sifre: p}, () => location.reload());
+}
+
+function startApp() {
+    document.getElementById("auth-screen").style.display = "none";
+    document.getElementById("u-info").innerHTML = `<b>${me.isim}</b><br><small>${me.rol.toUpperCase()}</small>`;
+    heartBeat();
+    setInterval(heartBeat, 60000);
+    renderMenu(); showHome();
+}
+
+function renderMenu() {
+    let m = `<button class="menu-opt" onclick="toggleNav(); showHome()">🏠 Ana Sayfa</button>`;
+    if(me.rol === 'admin' || me.rol === 'egitmen') {
+        m += `<button class="menu-opt" onclick="toggleNav(); showReports()">📊 Sınav Analizleri</button>`;
+        m += `<button class="menu-opt" onclick="toggleNav(); showEditor()">📝 Eğitim Editörü</button>`;
+    }
+    if(me.rol === 'admin') m += `<button class="menu-opt" onclick="toggleNav(); showAdmin()">⚙️ Yönetim Paneli</button>`;
+    
+    if(me.rol !== 'aday') {
+        m += `<div style="padding:15px 10px 5px; color:var(--p); font-size:11px; font-weight:bold;">EĞİTİMLER</div>`;
+        DERSLER.forEach((d, i) => m += `<button class="menu-opt" onclick="toggleNav(); openLesson(${i})">🛡️ ${d}</button>`);
+    }
+    document.getElementById("menu-area").innerHTML = m;
+}
+
+function toggleNav() {
+    const s = document.getElementById("sidebar"), o = document.getElementById("overlay");
+    s.classList.toggle("open");
+    o.style.display = s.classList.contains("open") ? "block" : "none";
+}
+
+function showHome() {
+    const type = (me.rol === 'aday') ? 'aday' : 'genel';
+    const conf = homeConfig[type] || {txt: "Hoş geldiniz.", img: "", vid: ""};
+    let h = `<div class="card"><h2>Merhaba ${me.isim}</h2><p style="white-space: pre-wrap;">${conf.txt}</p>`;
+    if(conf.img) h += `<img src="${conf.img}" style="width:100%; border-radius:15px; margin:10px 0;">`;
+    if(conf.vid) h += `<video controls style="width:100%; border-radius:15px; margin-top:15px;"><source src="${conf.vid}" type="video/mp4"></video>`;
+    document.getElementById("content").innerHTML = h + `</div>`;
+}
+
+function openLesson(idx) {
+    const html = dersicerikleri[idx] || "İçerik henüz hazır değil.";
+    const videoUrl = dersvideolari[idx] || "";
+    let h = `<div class="card"><h2>${DERSLER[idx]}</h2><div>${html}</div>`;
+    if(videoUrl) h += `<video controls style="width:100%; border-radius:15px; margin-top:15px; background:#000;"><source src="${videoUrl}" type="video/mp4"></video>`;
+    h += `<hr style="margin:20px 0; border:0; border-top:1px solid #1e293b;"><button class="btn" onclick="startExam(${idx})">SINAVA BAŞLA</button></div>`;
+    document.getElementById("content").innerHTML = h;
+}
+
+function showEditor() {
+    let h = `<h3>📝 Editör</h3><div style="display:flex; margin-bottom:15px;">
+        <button class="tab-btn active" id="tab1" onclick="switchTab(1)">Notlar</button>
+        <button class="tab-btn" id="tab2" onclick="switchTab(2)">Sorular</button>`;
+    if(me.rol === 'admin') h += `<button class="tab-btn" id="tab3" onclick="switchTab(3)">Ayarlar</button>`;
+    h += `</div><div id="editor-content"></div>`;
+    document.getElementById("content").innerHTML = h;
+    switchTab(1);
+}
+
+window.switchTab = function(n) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab'+n).classList.add('active');
+    const area = document.getElementById("editor-content");
+    if(n === 1) {
+        area.innerHTML = `<select id="ed-d" onchange="loadLessonEd(this.value)">` + DERSLER.map((d,i) => `<option value="${i}">${d}</option>`).join('') + `</select><div id="sub-area"></div>`;
+        loadLessonEd(0);
+    } else if(n === 2) {
+        area.innerHTML = `<select id="ed-s" onchange="loadQuestionEd(this.value)">` + DERSLER.map((d,i) => `<option value="${i}">${d}</option>`).join('') + `</select><div id="sub-area"></div>`;
+        loadQuestionEd(0);
+    } else { loadHomeSettings(); }
+}
+
+function loadLessonEd(idx) {
+    document.getElementById("sub-area").innerHTML = `<div class="card"><label>Ders Metni</label><textarea id="h-txt" rows="10">${dersicerikleri[idx] || ''}</textarea><label>Video Yükle (MP4)</label><input type="file" id="vid-up" accept="video/*"><button class="btn" id="save-h-btn" onclick="saveH(${idx})">GÜNCELLE</button></div>`;
+}
+
+window.saveH = async function(idx) {
+    const btn = document.getElementById("save-h-btn");
+    const file = document.getElementById("vid-up").files[0];
+    btn.disabled = true; btn.innerText = "YÜKLENİYOR...";
+    await db.ref('dersicerikleri/'+idx).set(document.getElementById("h-txt").value);
+    if(file) {
+        const ref = storage.ref('dersvideolari/' + idx + '.mp4');
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        await db.ref('dersvideolari/'+idx).set(url);
+    }
+    alert("Güncellendi!"); btn.disabled = false; btn.innerText = "GÜNCELLE";
+}
+
+function loadHomeSettings() {
+    const roles = [{id: 'genel', t: 'Eğitmen'}, {id: 'aday', t: 'Aday'}];
+    let h = "";
+    roles.forEach(r => {
+        const c = homeConfig[r.id] || {txt: "", img: "", vid: ""};
+        h += `<div class="card"><h4>${r.t}</h4><textarea id="ht-${r.id}" rows="4">${c.txt}</textarea><label>Resim:</label><input type="file" id="hi-file-${r.id}" accept="image/*"><label>Video:</label><input type="file" id="hv-file-${r.id}" accept="video/*"><button class="btn" onclick="saveHomeConf('${r.id}')">KAYDET</button></div>`;
+    });
+    document.getElementById("editor-content").innerHTML = h;
+}
+
+window.saveHomeConf = async function(id) {
+    let updateData = { ...homeConfig[id], txt: document.getElementById('ht-'+id).value };
+    const img = document.getElementById('hi-file-'+id).files[0];
+    const vid = document.getElementById('hv-file-'+id).files[0];
+    if(img) { const r = storage.ref(`home/${id}_img`); await r.put(img); updateData.img = await r.getDownloadURL(); }
+    if(vid) { const r = storage.ref(`home/${id}_vid`); await r.put(vid); updateData.vid = await r.getDownloadURL(); }
+    await db.ref('homeConfig/' + id).set(updateData);
+    alert("Kaydedildi!");
+}
+
+function showAdmin() {
+    let h = `<div class="card"><h3>Kullanıcı Ekle</h3><input id="un" placeholder="AD SOYAD"><select id="ur"><option value="aday">Aday</option><option value="katilimci">Katılımcı</option><option value="egitmen">Eğitmen</option></select><button class="btn" onclick="addU()">EKLE</button></div><div class="card"><table><thead><tr><th>İsim</th><th>Sil</th></tr></thead><tbody>`;
+    for(let id in tumKullanicilar) h += `<tr><td>${tumKullanicilar[id].isim}</td><td><button class="btn-danger" onclick="delU('${id}')">SİL</button></td></tr>`;
+    document.getElementById("content").innerHTML = h + `</tbody></table></div>`;
+}
+
+window.addU = function() {
+    const name = trFix(document.getElementById("un").value);
+    if(!name) return alert("İsim yazın!");
+    db.ref('kullanicilar').push({isim: name, rol: document.getElementById("ur").value, tarih: Date.now()});
+}
+
+window.delU = function(id) { if(confirm("Silinsin mi?")) db.ref('kullanicilar/'+id).remove(); }
+
+function loadQuestionEd(idx) {
+    let h = "";
+    for(let i=0; i<20; i++) {
+        const q = (sorubankasi[idx] && sorubankasi[idx][i]) ? sorubankasi[idx][i] : {s:"", a:"", b:"", c:"", d:"", r:"a"};
+        h += `<div class="card" style="font-size:11px;">Soru ${i+1}<input id="qs-${i}" value="${q.s}"><div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;"><input id="qa-${i}" value="${q.a}"><input id="qb-${i}" value="${q.b}"><input id="qc-${i}" value="${q.c}"><input id="qd-${i}" value="${q.d}"></div>Doğru: <select id="qr-${i}"><option value="a" ${q.r=='a'?'selected':''}>A</option><option value="b" ${q.r=='b'?'selected':''}>B</option><option value="c" ${q.r=='c'?'selected':''}>C</option><option value="d" ${q.r=='d'?'selected':''}>D</option></select></div>`;
+    }
+    document.getElementById("sub-area").innerHTML = h + `<button class="btn" onclick="saveQ(${idx})">KAYDET</button>`;
+}
+
+window.saveQ = function(idx) {
+    let d = []; for(let i=0; i<20; i++) d.push({s:document.getElementById('qs-'+i).value, a:document.getElementById('qa-'+i).value, b:document.getElementById('qb-'+i).value, c:document.getElementById('qc-'+i).value, d:document.getElementById('qd-'+i).value, r:document.getElementById('qr-'+i).value});
+    db.ref('sorubankasi/'+idx).set(d).then(() => alert("Sorular kaydedildi!"));
+}
+
+function showReports() {
+    let html = `<h3>📊 Sınav Analizleri</h3><div class="card" style="overflow-x:auto;"><table><thead><tr><th>İsim</th><th>Ders</th><th>Puan</th><th>Tarih</th><th>İncele</th></tr></thead><tbody>`;
+    tumSinavlar.slice().reverse().forEach(s => { 
+        html += `<tr><td>${s.isim}</td><td>${s.ders || '-'}</td><td>${s.puan}</td><td style="font-size:10px;">${s.tarih}</td><td><button onclick="showDetail('${s.id}')">👀</button></td></tr>`; 
+    });
+    document.getElementById("content").innerHTML = html + `</tbody></table></div>`;
+}
+
+window.s

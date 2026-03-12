@@ -1,0 +1,16 @@
+{
+  "name": "ANFA Akademi Eğitim Paneli",
+  "short_name": "ANFA Akademi",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#fbbf24",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1162/1162280.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
