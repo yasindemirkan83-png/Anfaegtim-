@@ -8,23 +8,22 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1162/1162280.png">
+    <link rel="apple-touch-icon" href="29158.png">
     <meta name="theme-color" content="#020617">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    
     <style>
         :root { --p: #fbbf24; --bg: #020617; --card: rgba(30, 41, 59, 0.95); --t: #f8fafc; --ok: #10b981; --err: #ef4444; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
         body { background: var(--bg); color: var(--t); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* PWA Tanıtım Ekranı */
-        #intro-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); z-index: 10001; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+        #intro-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
         
         /* Yükleme Bannerı */
-        #pwa-install-banner { position: fixed; bottom: 20px; left: 20px; right: 20px; background: var(--p); color: #000; padding: 15px; border-radius: 20px; display: none; z-index: 9999; justify-content: space-between; align-items: center; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid white; }
+        #pwa-banner { position: fixed; bottom: 20px; left: 10px; right: 10px; background: var(--p); color: #000; padding: 15px; border-radius: 15px; display: none; z-index: 9999; justify-content: space-between; align-items: center; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
         #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); display: flex; align-items: center; justify-content: center; z-index: 9998; }
         .auth-box { background: var(--card); padding: 40px; border-radius: 30px; width: 95%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -36,8 +35,6 @@
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
         .btn { background: var(--p); color: #000; padding: 16px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn:disabled { opacity: 0.5; }
-        .btn-danger { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .menu-opt { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 8px; }
         .q-opt { width: 100%; padding: 15px; margin: 10px 0; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; color: white; text-align: left; cursor: pointer; }
         .tab-btn { padding: 10px 20px; background: #1e293b; border: none; color: white; cursor: pointer; border-radius: 10px 10px 0 0; margin-right: 5px; }
@@ -50,20 +47,20 @@
 </head>
 <body>
 
-<div id="intro-overlay">
-    <div style="font-size: 60px; margin-bottom: 20px;">🛡️</div>
-    <h2 style="color:var(--p)">ANFA AKADEMİ</h2>
-    <p style="color:#94a3b8; max-width: 300px;">Eğitim ve sınav dünyasına hoş geldiniz. Uygulamayı hemen kullanmaya başlayın.</p>
-    <button class="btn" onclick="closeIntro()" style="max-width:200px">BAŞLA</button>
+<div id="intro-screen">
+    <img src="29158.png" style="width:100px; height:100px; border-radius:20px; margin-bottom:20px;">
+    <h1 style="color:var(--p)">ANFA AKADEMİ</h1>
+    <p>Eğitim platformuna hoş geldiniz.</p>
+    <button class="btn" onclick="startAppUI()" style="width:200px">GİRİŞE GİT</button>
 </div>
 
-<div id="pwa-install-banner">
-    <span>Uygulamayı ana ekrana ekle!</span>
-    <button onclick="installPWA()" style="background:#000; color:#fff; border:none; padding:10px 20px; border-radius:10px; font-weight:bold;">YÜKLE</button>
+<div id="pwa-banner">
+    <span>Uygulamayı telefonuna yükle!</span>
+    <button onclick="installApp()" style="background:#000; color:#fff; border:none; padding:8px 15px; border-radius:10px;">YÜKLE</button>
 </div>
 
 <div id="overlay" onclick="toggleNav()"></div>
-<div id="auth-screen">
+<div id="auth-screen" style="display:none;">
     <div class="auth-box">
         <h1 style="color:var(--p); margin:0;">ANFA AKADEMİ</h1>
         <p id="auth-info" style="font-size:12px; color:#fbbf24;">SİSTEME GİRİŞ YAPIN</p>
@@ -91,55 +88,34 @@
 </main>
 
 <script>
-// --- PWA ÇEKİRDEK MANTIĞI ---
+// PWA KAYIT VE BANNER MANTIĞI
+let deferredPrompt;
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
-}
-
-let deferredPrompt;
-const installBanner = document.getElementById('pwa-install-banner');
-
-window.addEventListener('load', () => {
-    // Tanıtım ekranı kontrolü
-    if (!localStorage.getItem('introShown')) {
-        document.getElementById('intro-overlay').style.display = 'flex';
-    }
-});
-
-function closeIntro() {
-    document.getElementById('intro-overlay').style.display = 'none';
-    localStorage.setItem('introShown', 'true');
-    // Eğer yükleme yapılabiliyorsa bannerı göster
-    if (deferredPrompt) installBanner.style.display = 'flex';
-    
-    // iOS için küçük bir ipucu (Opsiyonel)
-    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-    if (isIos) {
-        alert("iPhone'a yüklemek için: Tarayıcı altındaki Paylaş butonuna basıp 'Ana Ekrana Ekle'yi seçin.");
-    }
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // Sadece tanıtım geçildiyse bannerı göster
-    if (localStorage.getItem('introShown')) {
-        installBanner.style.display = 'flex';
-    }
+    document.getElementById('pwa-banner').style.display = 'flex';
 });
 
-async function installPWA() {
+async function installApp() {
     if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') installBanner.style.display = 'none';
+        if (outcome === 'accepted') document.getElementById('pwa-banner').style.display = 'none';
         deferredPrompt = null;
     }
 }
 
-// --- UYGULAMA MANTIĞI ---
-const DERSLER = ["Özel Güvenlik Hukuku", "Güvenlik Tedbirleri", "Güvenlik Sistemleri", "Temel İlkyardım", "Yangın Güvenliği", "Etkili İletişim", "Kalabalık Yönetimi", "Kişi Koruma", "Genel Kollukla İlişkiler", "Uyuşturucu Madde Bilgisi"];
+function startAppUI() {
+    document.getElementById('intro-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+}
 
+// UYGULAMA MANTIĞI (FİREBASE)
+const DERSLER = ["Özel Güvenlik Hukuku", "Güvenlik Tedbirleri", "Güvenlik Sistemleri", "Temel İlkyardım", "Yangın Güvenliği", "Etkili İletişim", "Kalabalık Yönetimi", "Kişi Koruma", "Genel Kollukla İlişkiler", "Uyuşturucu Madde Bilgisi"];
 const config = {
     apiKey: "AIzaSyBLSR56Dz8VXdFbZxfsnyLNM2T9gSb1pEQ",
     authDomain: "anfaegtim-6a4b9.firebaseapp.com",
@@ -360,4 +336,19 @@ function showReports() {
     document.getElementById("content").innerHTML = html + `</tbody></table></div>`;
 }
 
-window.s
+window.showDetail = function(id) {
+    const s = tumSinavlar.find(x => x.id === id);
+    let h = `<div class="card"><button onclick="showReports()" class="btn" style="width:auto; padding:8px 15px; margin-bottom:15px;">⬅ GERİ DÖN</button><h3>${s.isim} - ${s.ders}</h3>`;
+    s.detay.forEach((d, i) => { h += `<div style="padding:10px; border-bottom:1px solid #1e293b;"><b>${i+1}. ${d.q}</b><br><span style="color:${d.u == d.r ? 'var(--ok)' : 'var(--err)'}">Cevap: ${d.u.toUpperCase()}</span> | Doğru: ${d.r.toUpperCase()}</div>`; });
+    document.getElementById("content").innerHTML = h + `</tbody></table></div>`;
+}
+
+let cQ = 0, score = 0, aDers = 0, myAns = [];
+window.startExam = function(idx) {
+    if(!sorubankasi[idx] || sorubankasi[idx].length < 20) return alert("Soru bankası eksik!");
+    aDers = idx; cQ = 0; score = 0; myAns = []; renderQuestion();
+}
+
+function renderQuestion() {
+    const q = sorubankasi[aDers][cQ];
+    document.getElementById("content").innerHTML = `<div class="card"><h3>${q.
