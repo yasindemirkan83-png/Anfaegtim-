@@ -1,5 +1,5 @@
-const cacheName = 'anfa-v42';
-const filesToCache = ['./', './index.html'];
+const cacheName = 'anfa-v42-cache';
+const filesToCache = ['./', './index.html', './manifest.json', './29158.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(cacheName).then(cache => cache.addAll(filesToCache)));
