@@ -18,12 +18,7 @@
         :root { --p: #fbbf24; --bg: #020617; --card: rgba(30, 41, 59, 0.95); --t: #f8fafc; --ok: #10b981; --err: #ef4444; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
         body { background: var(--bg); color: var(--t); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Intro ve PWA Ekranları */
-        #intro-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
-        #pwa-banner { position: fixed; bottom: 20px; left: 10px; right: 10px; background: var(--p); color: #000; padding: 15px; border-radius: 15px; display: none; z-index: 11000; justify-content: space-between; align-items: center; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-
-        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); display: flex; align-items: center; justify-content: center; z-index: 9998; }
+        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b, #020617); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .auth-box { background: var(--card); padding: 40px; border-radius: 30px; width: 95%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         nav { position: fixed; left: 0; top: 0; bottom: 0; width: 280px; background: #020617; border-right: 1px solid #1e293b; z-index: 4000; transform: translateX(-100%); overflow-y: auto; }
         nav.open { transform: translateX(0); }
@@ -33,6 +28,8 @@
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
         .btn { background: var(--p); color: #000; padding: 16px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn:disabled { opacity: 0.5; }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         .menu-opt { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 10px; text-align: left; cursor: pointer; margin-bottom: 8px; }
         .q-opt { width: 100%; padding: 15px; margin: 10px 0; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 12px; color: white; text-align: left; cursor: pointer; }
         .tab-btn { padding: 10px 20px; background: #1e293b; border: none; color: white; cursor: pointer; border-radius: 10px 10px 0 0; margin-right: 5px; }
@@ -45,24 +42,11 @@
 </head>
 <body>
 
-<div id="intro-screen">
-    <img src="29158.png" style="width:100px; height:100px; border-radius:20px; margin-bottom:20px;">
-    <h1 style="color:var(--p)">ANFA AKADEMİ</h1>
-    <p>Eğitim platformu yükleniyor...</p>
-    <button class="btn" onclick="startAppUI()" style="width:200px">GİRİŞE GİT</button>
-</div>
-
-<div id="pwa-banner">
-    <span>Uygulamayı telefona kur!</span>
-    <button onclick="installApp()" style="background:#000; color:#fff; border:none; padding:8px 15px; border-radius:10px;">YÜKLE</button>
-</div>
-
 <div id="overlay" onclick="toggleNav()"></div>
-
-<div id="auth-screen" style="display:none;">
+<div id="auth-screen">
     <div class="auth-box">
         <h1 style="color:var(--p); margin:0;">ANFA AKADEMİ</h1>
-        <p id="auth-info" style="font-size:12px; color:#fbbf24;">GİRİŞ YAPIN</p>
+        <p id="auth-info" style="font-size:12px; color:#fbbf24;">SİSTEME GİRİŞ YAPIN</p>
         <div id="login-form">
             <input type="text" id="l-user" placeholder="AD SOYAD" oninput="this.value = trFix(this.value)">
             <input type="password" id="l-pass" placeholder="ŞİFRE">
@@ -87,36 +71,13 @@
 </main>
 
 <script>
-// --- PWA KAYIT ---
-let deferredPrompt;
+// --- SERVICE WORKER KAYDI ---
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => console.log('SW Kayıtlı')).catch(err => console.log('SW Hata:', err));
-    });
+    navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Hazır"));
 }
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('pwa-banner').style.display = 'flex';
-});
-
-async function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') document.getElementById('pwa-banner').style.display = 'none';
-        deferredPrompt = null;
-    }
-}
-
-function startAppUI() {
-    document.getElementById('intro-screen').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-}
-
-// --- FİREBASE VE UYGULAMA MANTIĞI ---
 const DERSLER = ["Özel Güvenlik Hukuku", "Güvenlik Tedbirleri", "Güvenlik Sistemleri", "Temel İlkyardım", "Yangın Güvenliği", "Etkili İletişim", "Kalabalık Yönetimi", "Kişi Koruma", "Genel Kollukla İlişkiler", "Uyuşturucu Madde Bilgisi"];
+
 const config = {
     apiKey: "AIzaSyBLSR56Dz8VXdFbZxfsnyLNM2T9gSb1pEQ",
     authDomain: "anfaegtim-6a4b9.firebaseapp.com",
@@ -169,7 +130,7 @@ function heartBeat() {
 function login() {
     const u = trFix(document.getElementById("l-user").value);
     const p = document.getElementById("l-pass").value;
-    if(!u) return alert("Adınızı girin.");
+    if(!u) return alert("Lütfen adınızı girin.");
     
     let found = false;
     for(let id in tumKullanicilar) {
@@ -184,12 +145,12 @@ function login() {
 }
 
 function firstLogin(id, name) {
-    document.querySelector(".auth-box").innerHTML = `<h3>Hoş Geldin, ${name}</h3><p>Yeni şifre belirle:</p><input type="password" id="n-p" placeholder="Şifre"><button class="btn" onclick="saveP('${id}')">KAYDET</button>`;
+    document.querySelector(".auth-box").innerHTML = `<h3>Hoş Geldin, ${name}</h3><p>Şifreni belirle:</p><input type="password" id="n-p" placeholder="Yeni Şifre"><button class="btn" onclick="saveP('${id}')">KAYDET VE GİRİŞ YAP</button>`;
 }
 
 function saveP(id) {
     const p = document.getElementById("n-p").value;
-    if(p.length < 4) return alert("En az 4 karakter!");
+    if(p.length < 4) return alert("Min 4 karakter!");
     db.ref('kullanicilar/'+id).update({sifre: p}, () => location.reload());
 }
 
@@ -352,4 +313,21 @@ window.startExam = function(idx) {
 
 function renderQuestion() {
     const q = sorubankasi[aDers][cQ];
-    docu
+    document.getElementById("content").innerHTML = `<div class="card"><h3>${q.s}</h3><button class="q-opt" id="b-a" onclick="check('a')">A) ${q.a}</button><button class="q-opt" id="b-b" onclick="check('b')">B) ${q.b}</button><button class="q-opt" id="b-c" onclick="check('c')">C) ${q.c}</button><button class="q-opt" id="b-d" onclick="check('d')">D) ${q.d}</button></div>`;
+}
+
+window.check = function(a) {
+    const cor = sorubankasi[aDers][cQ].r;
+    myAns.push({q: sorubankasi[aDers][cQ].s, u: a, r: cor});
+    if(a === cor) score += 5;
+    cQ++; if(cQ < 20) renderQuestion(); else finishExam();
+}
+
+function finishExam() {
+    db.ref('sinavlar').push({isim: me.isim, ders: DERSLER[aDers], puan: score, tarih: new Date().toLocaleString(), detay: myAns});
+    document.getElementById("content").innerHTML = `<div class="card"><h2>Sonuç: ${score}</h2><button class="btn" onclick="showHome()">KAPAT</button></div>`;
+}
+</script>
+</body>
+</html>
+
